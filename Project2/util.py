@@ -17,12 +17,18 @@ def one_hot_embedding(labels, num_classes):
     y = torch.eye(num_classes) 
     return y[labels]
 
+def convert_to_one_hot_labels(input, target):
+    tmp = input.new_zeros(target.size(0), target.max() + 1)
+    tmp.scatter_(1, target.view(-1, 1), 1.0)
+    return tmp
+
 def generate_disk_dataset(n_points ,one_hot_labels=True):
     input = Tensor(n_points, 2).uniform_(0,1)
     center = Tensor([1/2,1/2]).view(1, -1)
     label = ((input - center).norm(p=2, dim=1) < 1/math.sqrt(2*math.pi)).long()
     if(one_hot_labels):
         label = one_hot_embedding(label, 2)
+        #label = convert_to_one_hot_labels(input, label)
     return input, label
 
 input, label = generate_disk_dataset(1000, True)

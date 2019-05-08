@@ -11,7 +11,8 @@ class Optimizer(object):
         # loss backward -> MLP backward -> module backward
         loss_fnc.backward(model)
         model.update(self)
-        return error
+        accuracy = loss_fnc.accuracy()
+        return error, accuracy
 
 class GD(Optimizer):
     def __init__(self, gamma):
@@ -20,8 +21,9 @@ class GD(Optimizer):
         return w - self.gamma * grad
     def train(self, input, target, loss_fnc, model, nb_epoch):
         for i in range(nb_epoch):
-            error = self.one_pass(input, target, loss_fnc, model)
-            print(error)
+            error, accuracy = self.one_pass(input, target, loss_fnc, model)
+        print("error: ", error)
+        print("accuracy: ", accuracy)
             
 class SGD(Optimizer):
     def __init__(self, gamma, batch_size):

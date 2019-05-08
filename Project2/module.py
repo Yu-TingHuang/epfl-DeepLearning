@@ -30,7 +30,6 @@ class Linear(Module):
         # upstream_derivatie: batch_size * output_dim    
         
         # gradient of weight
-        self.gradW = (upstream_derivative.t()).mm(self.input)
         self.gradW = (self.input.t()).mm(upstream_derivative)
         # gradient of bias
         if(self.Bias):

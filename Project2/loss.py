@@ -7,6 +7,9 @@ class Loss_fnc(object):
 
     def backward(self, MLP):
         raise NotImplementedError
+    
+    def accurracy(self):
+        raise NotImplementedError
 
 class MSE(Loss_fnc):
     def loss(self, output, target):
@@ -24,20 +27,36 @@ class MSE(Loss_fnc):
         # back propagation of the model
         return model.backward(2 * diff/n)
     
+    def accuracy(self):
+        n = self.output.size()[0]
+        softmax = torch.softmax(self.output, dim = 1)
+        predict = torch.argmax(softmax, dim = 1)
+        groundtruth = torch.argmax(self.target, dim = 1)
+        accuracy = ((predict == groundtruth).sum())
+        return accuracy
+    
 class CrossEntropy(Loss_fnc):
     # binary cross entropy
     def loss(self, output, target):
         # output_size : batch_size * output_dim
         self.output = output
         self.target = target
-        #print(self.target)
-        y = 1/(1 + (self.output[:, 0] - self.output[:, 1]).exp())
-        #print(y.size())
-        return -(target[:, 0] * (y.log()) + (target[:, 1]) * ((1 - y).log())).mean()
-    
-    def backward(self, model):
-        y = 1/(1 + (self.output[:, 0] - self.output[:, 1]).exp())
-        n = self.output.size()[0]
-        grad = -(self.target[:, 0] / y - (self.target[:, 1]) / (1 - y))
+        softmax = torch.softmax(output, dim = 1)
+        loss = (-target * (softmax.log())).sum(dim = 1)
+        return loss.mean()
         
+    def backward(self, model):
+        n = self.output.size()[0]
+        softmax = torch.softmax(self.output, dim = 1)
+        y = -self.target[:, 0] * softmax[:, 1] + self.target[:, 1] * softmax[:, 0]
+        y = y.view(-1, 1)
+        grad = torch.cat([y, -y], dim = 1)
         return model.backward(grad/n)
+    
+    def accuracy(self):
+        n = self.output.size()[0]
+        softmax = torch.softmax(self.output, dim = 1)
+        predict = torch.argmax(softmax, dim = 1)
+        groundtruth = torch.argmax(self.target, dim = 1)
+        accuracy = ((predict == groundtruth).sum())
+        return accuracy
