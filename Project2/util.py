@@ -33,7 +33,7 @@ def generate_disk_dataset(n_points ,one_hot_labels=True):
 
 input, label = generate_disk_dataset(1000, True)
 
-def plot_with_labels(input, labels,ax):
+def plot_with_labels(input, labels, ax):
     colors = []
     for b in labels:
         if (b==1):

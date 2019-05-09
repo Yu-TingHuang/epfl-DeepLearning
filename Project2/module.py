@@ -11,7 +11,6 @@ class Module(object):
 class Linear(Module):
     def __init__(self, input_dim, output_dim, bias = True):
         self.w = Tensor(input_dim, output_dim).normal_()
-        #print("At initalization weights W : {}".format(self.w))
         self.b = Tensor(1, output_dim).normal_()
 
         self.gradW = Tensor(input_dim, output_dim).zero_()
@@ -41,6 +40,7 @@ class Linear(Module):
             self.b = optimizer.step(self.b, self.gradB)
     def param(self):
         return []
+    
 class ReLU(Module):
     def forward(self, input):
         self.input = input
@@ -65,6 +65,35 @@ class Tanh(Module):
         pass
     def param(self):
         return []
+    
+class sigmoid(Module):
+    def forward(self, input):
+        self.input = input
+        self.output = 1 / (1 + (-input).exp())
+        return self.output
+    def backward(self, upstream_derivative):
+        return upstream_derivative * (self.output - self.output**2)
+    def update(self, optimizer):
+        pass
+    def param(self):
+        return []
+
+class BN(Module):
+    def forward(self, input):
+        epsilon = 1e-6
+        self.input = input
+        sum = input.mean(dim = 0)
+        std = input.std(dim = 0)
+        denominator = torch.sqrt(std**2 + epsilon)
+        self.output = (input - sum) / denominator
+        return self.output
+    def backward(self, upstream_derivative):
+        return upstream_derivative
+    def update(self, optimizer):
+        pass
+    def param(self):
+        return []
+
 class MLP(object):
     def __init__(self, *args):
         self.sequential_modules = []

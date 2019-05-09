@@ -1,5 +1,15 @@
+from __future__ import division
 import torch
 from torch import Tensor
+
+def accuracy(input, target):
+    length = input.size()[0]
+    softmax = torch.softmax(input, dim = 1)
+    predict = torch.argmax(softmax, dim = 1)
+    groundtruth = torch.argmax(target, dim = 1)
+    num = ((predict == groundtruth).sum())
+    accuracy = num.item() / length
+    return accuracy
 
 class Optimizer(object):
     def step(self):
@@ -11,8 +21,7 @@ class Optimizer(object):
         # loss backward -> MLP backward -> module backward
         loss_fnc.backward(model)
         model.update(self)
-        accuracy = loss_fnc.accuracy()
-        return error, accuracy
+        return error
 
 class GD(Optimizer):
     def __init__(self, gamma):
@@ -20,10 +29,16 @@ class GD(Optimizer):
     def step(self, w, grad):
         return w - self.gamma * grad
     def train(self, input, target, loss_fnc, model, nb_epoch):
+        acc = []
+        err = []
         for i in range(nb_epoch):
-            error, accuracy = self.one_pass(input, target, loss_fnc, model)
-        print("error: ", error)
-        print("accuracy: ", accuracy)
+            error = self.one_pass(input, target, loss_fnc, model)            
+            output = model.forward(input)
+            a = accuracy(output, target)
+            acc.append(a)
+            err.append(error)
+            #print(error.item())
+        return err, acc
             
 class SGD(Optimizer):
     def __init__(self, gamma, batch_size):
@@ -32,11 +47,19 @@ class SGD(Optimizer):
     def step(self, w, grad):
         return w - self.gamma * grad  
     def train(self, input, target, loss_fnc, model, nb_epoch):  
+        acc = []
+        err = []
         for i in range(nb_epoch):
             idx = torch.randperm(input.size()[0])
             batch_num = input.size()[0] / self.batch_size
-            for i in range(batch_num):
+            for i in range(int(batch_num)):
                 batch_idx = idx[i * self.batch_size: (i+1)* self.batch_size - 1]
-                train_input = input[batch_index, :]
-                train_target = target[batch_index, :]
+                train_input = input[batch_idx, :]
+                train_target = target[batch_idx, :]
                 error = self.one_pass(train_input, train_target, loss_fnc, model)
+            output = model.forward(input)
+            a = accuracy(output, target)
+            e = loss_fnc.loss(output, target)
+            acc.append(a)
+            err.append(e)
+        return err, acc

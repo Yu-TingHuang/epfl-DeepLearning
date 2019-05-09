@@ -8,9 +8,6 @@ class Loss_fnc(object):
     def backward(self, MLP):
         raise NotImplementedError
     
-    def accurracy(self):
-        raise NotImplementedError
-
 class MSE(Loss_fnc):
     def loss(self, output, target):
         self.output = output
@@ -26,14 +23,6 @@ class MSE(Loss_fnc):
         n = diff.size()[0]
         # back propagation of the model
         return model.backward(2 * diff/n)
-    
-    def accuracy(self):
-        n = self.output.size()[0]
-        softmax = torch.softmax(self.output, dim = 1)
-        predict = torch.argmax(softmax, dim = 1)
-        groundtruth = torch.argmax(self.target, dim = 1)
-        accuracy = ((predict == groundtruth).sum())
-        return accuracy
     
 class CrossEntropy(Loss_fnc):
     # binary cross entropy
@@ -52,11 +41,3 @@ class CrossEntropy(Loss_fnc):
         y = y.view(-1, 1)
         grad = torch.cat([y, -y], dim = 1)
         return model.backward(grad/n)
-    
-    def accuracy(self):
-        n = self.output.size()[0]
-        softmax = torch.softmax(self.output, dim = 1)
-        predict = torch.argmax(softmax, dim = 1)
-        groundtruth = torch.argmax(self.target, dim = 1)
-        accuracy = ((predict == groundtruth).sum())
-        return accuracy
